@@ -1,0 +1,12 @@
+// tree1
+digraph {
+	A [label=king]
+	B [label=king]
+	C [label=king]
+	D [label=king]
+	E [label=king]
+	A -> B
+	A -> C
+	C -> D
+	C -> E
+}
