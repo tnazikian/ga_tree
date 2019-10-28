@@ -2,7 +2,7 @@
 digraph {
 	rank=min
 	0 [label="+"]
-	1 [label=2.56596015882272]
+	1 [label=z]
 	2 [label=x]
 	0 -> 1
 	0 -> 2
