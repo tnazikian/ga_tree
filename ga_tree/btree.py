@@ -8,7 +8,7 @@ Representation consists of an array of connected binary nodes.
 """
 from .node import Node
 import numpy as np
-from math import *
+from numpy import *
 from scipy.stats.stats import pearsonr
 
 TEST = False  # Toggle if you want real numbers for coeffs
@@ -238,41 +238,25 @@ class Bin_tree:
         return self.fitness
 
     def cor_fitness(self, data, y):
-        """Uses F-test to generate fitness score
-        Use for determining functional form"""
-        f = 0
-        # find all columns that are in tree
-        datacols = data.columns
-        # Get subset of data with only these
-
-        text = self.traverse()
-        # Create a sorted list of variables that are present in function
-        x = [(text.find(i), i) for i in datacols]
-        # sort vars by order of appearance from left to right
-        #         x.sort(key=lambda x: x[0])
-        vars_in_equation = [i[1] for i in x]
-        #         #create data subset
-        #         subset = data[vars_in_equation]
-        ind = 0
-        func_output = []
-        for i, row in data.iterrows():
-            text_c = text
-            for var in vars_in_equation:
-                text_c = text_c.replace(var, str(data[var][i]))
-            try:
-                y_pred = eval(text_c)
-                func_output.append(y_pred)
-            except:
-                print(self.traverse())
-                print(self.node_list)
-                print(self.get_root().num_children)
-                raise
-
-        cor = np.abs(pearsonr(y, func_output)[0])
-        if isnan(cor):
-            self.fitness = 0
-        else:
-            self.fitness = cor
+        """
+        Uses F-test to generate fitness score
+        Use for determining functional form
+        """
+        function = self.traverse()
+        print(function)
+        for k in range(100):
+            data['c%d' % k] = 1.0
+        func_output = eval(function, globals(), data)
+        if isinstance(func_output, (np.float64, float64, float)):
+            func_output = y * 0.0 + func_output
+        func_output_fixed = np.nan_to_num(func_output)
+        try:
+            p = pearsonr(func_output_fixed, y)[0]
+        except Exception:
+            p = 0.0
+        if np.isnan(p):
+            p = 0.0
+        self.fitness = np.abs(p)
         return self.fitness
 
     # def __deepcopy__(self, memo={}):

@@ -4,6 +4,7 @@ import ga_tree
 from tqdm import tqdm
 from pprint import pprint
 import sys
+import numpy as np
 
 print(sys.argv)
 
@@ -20,19 +21,18 @@ args = parser.parse_args()
 
 pprint(args)
 
-data = pd.read_pickle(args.datapath)
 num_cycles = args.n_cycles
 num_individuals = args.n_individuals
 
-data_in = data.loc[:, data.columns[:-1]]
-data_out = data.loc[:, data.columns[-1]]
+data_in = {}
+data_in['x'] = np.linspace(0, 2 * np.pi * 10, 1000)
+data_in['y'] = np.linspace(0, 2 * np.pi * 10, 1000)
+data_out = np.sin(data_in['x']) + np.sin(data_in['y'])
 
 # Define operators
 unary_operands = ['sin', 'cos']
 binary_operands = ['+', '-', '*', '/']
-terminal_operands = ["c"]
-for i in data.columns[:-1]:
-    terminal_operands.append(i)
+terminal_operands = ["c"] + list(data_in.keys())
 
 # test to initialize Population
 delta = 0.12
@@ -45,13 +45,11 @@ for i in range(num_individuals):
     individuals.append(a)
 pop = ga_tree.Population(individuals, data_in, data_out)
 
-fitnesses = []  # track best fitness score out of population
 best_funcs = []
 # Training
 for i in range(num_cycles):
-    pop.cycle()
+    pop.cycle('other')
     best = pop.get_best_func()
-    fitnesses.append(best.mse_fitness(x, y))
     best_funcs.append(i)
 
 print(best)
