@@ -55,18 +55,17 @@ def get_relatives(node):
     """returns deep copy of node attributes"""
     return copy.deepcopy([node.parent, node.left, node.right, node.value, node.coeff, node.op, node.num_children, node.name])
 
-
 def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="test"):
-    """takes in tree & creates graphviz (DOT language graph description). 
-    
+    """takes in tree & creates graphviz (DOT language graph description).
+
     :param tree: Tree you want to visualize
-    
+
     :param show_coeff: displays coefficients on nodes that have them
-    
+
     :param render: exports the graph image if True
-    
+
     :param render_format: Can choose png, pdf, svg, etc.
-    
+
     :param name: Name of exported model
     """
     root = tree.get_root()
@@ -93,7 +92,7 @@ def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="te
                 dot.node(str(n.index), str(n.coeff)+'*'+str(n.value))
             elif n.coeff is None and n.value is not None:
                 dot.node(str(n.index), str(n.value))
-    
+
     # For each node in tree, draw edges to its children
     for n in tree.node_list:
         if n.num_children > 0:
@@ -101,12 +100,10 @@ def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="te
                 dot.edge(str(n.index), str(n.left.index))
             if n.right is not None:
                 dot.edge(str(n.index), str(n.right.index))
-    
-    # Export & display tree in separate window            
+
+    # Export & display tree in separate window
     if render:
         dot.format=render_format
-        dot.render('test-output/{}'.format(name), view=True)  
-    
+        dot.render('test-output/{}'.format(name), view=True)
+
     return dot
-                
-    

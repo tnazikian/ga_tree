@@ -6,7 +6,7 @@ Toshiki Nazikian 10/28/19
 Constructs a binary tree representing an analytic function. 
 Representation consists of an array of connected binary nodes. 
 """
-from node import node
+from .node import Node
 import numpy as np
 from math import *
 from scipy.stats.stats import pearsonr   
@@ -14,9 +14,10 @@ from scipy.stats.stats import pearsonr
 TEST=False #Toggle if you want real numbers for coeffs
 COEFF_MAX=3
 import copy
-class bin_tree():
+
+class Bin_tree():
     def __init__(self, delta, term, unary, binary, COEFF_MAX=3):
-        self.root = node("root")
+        self.root = Node("root")
         self.delta = delta
         self.num_nodes = 0
         self.node_list = []
@@ -155,7 +156,7 @@ class bin_tree():
     def mutate_node(self, n):
         """takes in either a node or node index, and constructs
         a new tree from that point."""
-        if isinstance(n, node):
+        if isinstance(n, Node):
             self.generate_tree(n, n.probs)
         elif isinstance(n, int):
             self.generate_tree(self.node_list[n], self.node_list[n].probs)
@@ -272,4 +273,8 @@ class bin_tree():
             self.fitness = 0
         else:
             self.fitness = cor
-        return self.fitness 
+        return self.fitness
+
+    #def __deepcopy__(self, memo={}):
+
+__all__ = ['Bin_tree']

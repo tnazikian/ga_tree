@@ -13,7 +13,9 @@ node with a variable and coeff of 1. If both are not NULL, it is a variable
 times a coeff. e.g. (c1 * x1)
 """
 
-class node():
+__all__=['Node']
+
+class Node():
     def __init__(self, name, parent=None):
         self.name = name
         self.num_children=0
@@ -27,12 +29,12 @@ class node():
         self.parent = parent
         
     def init_left(self):
-        left_node = node("left", parent=self)
+        left_node = Node("left", parent=self)
         self.left = left_node
         self.num_children += 1
         
     def init_right(self):
-        right_node = node("right", parent=self)
+        right_node = Node("right", parent=self)
         self.right = right_node
         self.num_children += 1 
     
