@@ -32,7 +32,7 @@ class Population:
         self.data = data
         self.y = y
         # Calculate fitness scores of initial population
-        self.scores = [individual.mse_fitness(self.data, self.y) 
+        self.scores = [individual.cor_fitness(self.data, self.y) 
              for individual in individuals]
         self.best_ind = np.where(self.scores == np.max(self.scores))[0][0]
         # used to compare best score of previous population to new population
@@ -49,7 +49,7 @@ class Population:
         new_pop = np.random.choice(self.individuals, self.pop_size, p=prob, replace=True)
         return new_pop
         
-    def cycle(self):
+    def cycle(self, fitness_func="mse"):
         new_pop = self.new_pop(self.scores)
         # creates deep copies of chosen individuals to make new population
         self.individuals = [copy.deepcopy(individual) for individual in new_pop]
@@ -63,14 +63,22 @@ class Population:
             mutate_ind = range(self.pop_size)
         if len(mutate_ind) > 0:
             self.mutate(mutate_ind)
-        self.scores = [individual.mse_fitness(self.data, self.y) 
+        if fitness_func=="mse":
+            self.scores = [individual.mse_fitness(self.data, self.y) 
+            for individual in self.individuals] 
+        else:
+            self.scores = [individual.cor_fitness(self.data, self.y)
              for individual in self.individuals]
         current_best_ind = np.where(self.scores == np.max(self.scores))[0][0]
         worst_score_ind = np.where(self.scores == np.min(self.scores))[0][0]
         # If best score of current pop < previous pop, replace worst performing
         # candidate with previous best candidate
-        if self.last_best_func.mse_fitness(self.data, self.y) > self.scores[current_best_ind]:
-            self.scores[worst_score_ind] = self.last_best_func.mse_fitness(self.data, self.y)
+        if fitness_func=="mse":
+            last_score = self.last_best_func.mse_fitness(self.data, self.y)
+        else:
+            last_score = self.last_best_func.cor_fitness(self.data, self.y)
+        if last_score > self.scores[current_best_ind]:
+            self.scores[worst_score_ind] = last_score
             self.individuals[worst_score_ind] = self.last_best_func
             self.best_ind = worst_score_ind
         else:
@@ -139,7 +147,7 @@ if __name__=='__main__':
 
     # Define operators
     unary_operands = ['sin', 'cos']
-    binary_operands = ['+']
+    binary_operands = ['+', '-', '*', '/']
     terminal_operands = ["c"]
     for i in data.columns[:-1]:
         terminal_operands.append(i)
@@ -162,3 +170,5 @@ if __name__=='__main__':
         best = pop.get_best_func()
         fitnesses.append(best.mse_fitness(x, y))
         best_funcs.append(i)
+
+    print(best)

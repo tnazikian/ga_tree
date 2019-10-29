@@ -9,6 +9,7 @@ Representation consists of an array of connected binary nodes.
 from node import node
 import numpy as np
 from math import *
+from scipy.stats.stats import pearsonr   
 
 TEST=False #Toggle if you want real numbers for coeffs
 COEFF_MAX=3
@@ -233,9 +234,42 @@ class bin_tree():
             f += err
         mean_error = f/len(data)
         self.fitness = 1000*(1/(1+mean_error))
-        return self.fitness
-    
-    def var_fitness(self, data, y):
+        return self.fitness 
+
+    def cor_fitness(self, data, y):
         """Uses F-test to generate fitness score
         Use for determining functional form"""
-        pass
+        f = 0
+        # find all columns that are in tree
+        datacols=data.columns
+        # Get subset of data with only these 
+        
+        text = self.traverse()
+        # Create a sorted list of variables that are present in function
+        x = [(text.find(i), i) for i in datacols]
+        # sort vars by order of appearance from left to right
+#         x.sort(key=lambda x: x[0])
+        vars_in_equation = [i[1] for i in x]
+#         #create data subset 
+#         subset = data[vars_in_equation]
+        ind = 0
+        func_output = []
+        for i, row in data.iterrows():
+            text_c = text
+            for var in vars_in_equation:
+                text_c = text_c.replace(var, str(data[var][i]))
+            try:
+                y_pred = eval(text_c)
+                func_output.append(y_pred)
+            except:
+                print(self.traverse())
+                print(self.node_list)
+                print(self.get_root().num_children)
+                raise
+        
+        cor = np.abs(pearsonr(y, func_output)[0])
+        if isnan(cor):
+            self.fitness = 0
+        else:
+            self.fitness = cor
+        return self.fitness 
