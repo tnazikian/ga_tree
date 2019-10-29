@@ -6,6 +6,7 @@ Toshiki Nazikian 10/28/19
 Constructs a binary tree representing an analytic function. 
 Representation consists of an array of connected binary nodes. 
 """
+import warnings
 from .node import Node
 import numpy as np
 from numpy import *
@@ -243,16 +244,19 @@ class Bin_tree:
         Use for determining functional form
         """
         function = self.traverse()
-        print(function)
         for k in range(100):
             data['c%d' % k] = 1.0
-        func_output = eval(function, globals(), data)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            func_output = eval(function, globals(), data)
         if isinstance(func_output, (np.float64, float64, float)):
             func_output = y * 0.0 + func_output
         func_output_fixed = np.nan_to_num(func_output)
         try:
-            p = pearsonr(func_output_fixed, y)[0]
-        except Exception:
+            with warnings.catch_warnings():
+                warnings.simplefilter('error')
+                p = pearsonr(func_output_fixed, y)[0]
+        except Exception as _excp:
             p = 0.0
         if np.isnan(p):
             p = 0.0
