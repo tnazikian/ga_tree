@@ -13,55 +13,56 @@ node with a variable and coeff of 1. If both are not NULL, it is a variable
 times a coeff. e.g. (c1 * x1)
 """
 
-__all__=['Node']
+__all__ = ['Node']
 
-class Node():
+
+class Node:
     def __init__(self, name, parent=None):
         self.name = name
-        self.num_children=0
-        self.index=None
-        self._left=None
-        self._right=None
-        self._op=None
-        self.coeff=None
+        self.num_children = 0
+        self.index = None
+        self._left = None
+        self._right = None
+        self._op = None
+        self.coeff = None
         self._value = None
         self.probs = None
         self.parent = parent
-        
+
     def init_left(self):
         left_node = Node("left", parent=self)
         self.left = left_node
         self.num_children += 1
-        
+
     def init_right(self):
         right_node = Node("right", parent=self)
         self.right = right_node
-        self.num_children += 1 
-    
-    @property    
+        self.num_children += 1
+
+    @property
     def left(self):
         return self._left
-    
-    @property    
+
+    @property
     def right(self):
         return self._right
-    
-    @property    
+
+    @property
     def op(self):
         return self._op
-    
-    @property    
+
+    @property
     def value(self):
         return self._value
-    
+
     @value.setter
     def value(self, val):
         self._value = val
-    
+
     @left.setter
     def left(self, node):
         self._left = node
-    
+
     @right.setter
     def right(self, node):
         self._right = node
@@ -69,9 +70,8 @@ class Node():
     @op.setter
     def op(self, op):
         self._op = op
-        
+
     def __repr__(self):
         if self.num_children > 0:
-            return "(left: {}, op: {}, right: {})".format(
-                self.left, self.op, self.right)
+            return "(left: {}, op: {}, right: {})".format(self.left, self.op, self.right)
         return "{}*{}".format(self.coeff, self.value)

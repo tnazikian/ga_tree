@@ -1,6 +1,6 @@
 import pandas as pd
 import argparse, pickle
-from ga_tree import Bin_tree, Population
+import ga_tree
 from tqdm import tqdm
 from pprint import pprint
 import sys
@@ -20,17 +20,12 @@ args = parser.parse_args()
 
 pprint(args)
 
-#     f = open(args.datapath, 'rb')
-#     data = pickle.load(f)
-
 data = pd.read_pickle(args.datapath)
 num_cycles = args.n_cycles
 num_individuals = args.n_individuals
-x = data.loc[:, data.columns[:-1]]
-y = data.loc[:, data.columns[-1]]
-#     f.close()
 
-# operators = [i for i in args.list.split(',')]
+data_in = data.loc[:, data.columns[:-1]]
+data_out = data.loc[:, data.columns[-1]]
 
 # Define operators
 unary_operands = ['sin', 'cos']
@@ -39,20 +34,21 @@ terminal_operands = ["c"]
 for i in data.columns[:-1]:
     terminal_operands.append(i)
 
-#test to initialize Population
-c=[0.1, 0.2]
-c.append(1-sum(c))
-individuals=[]
+# test to initialize Population
+delta = 0.12
+c = [0.1, 0.2]
+c.append(1 - sum(c))
+individuals = []
 for i in range(num_individuals):
-    a=Bin_tree(delta=0.12, term=terminal_operands, unary=unary_operands, binary=binary_operands)
-    a.generate_tree(a.get_root(), c)
+    a = ga_tree.Bin_tree(delta=delta, term=terminal_operands, unary=unary_operands, binary=binary_operands)
+    a.generate_tree(c)
     individuals.append(a)
-pop = Population(individuals, x, y)
+pop = ga_tree.Population(individuals, data_in, data_out)
 
-fitnesses = []      # track best fitness score out of population
+fitnesses = []  # track best fitness score out of population
 best_funcs = []
 # Training
-for i in tqdm(range(num_cycles)):
+for i in range(num_cycles):
     pop.cycle()
     best = pop.get_best_func()
     fitnesses.append(best.mse_fitness(x, y))

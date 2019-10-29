@@ -9,6 +9,7 @@ from graphviz import Digraph
 import numpy as np
 import copy
 
+
 def swap_subtrees(tree1, tree2, debug=False):
     """randomly selects two subtrees and swaps them"""
     choice1 = np.random.choice(tree1.node_list)
@@ -20,13 +21,18 @@ def swap_subtrees(tree1, tree2, debug=False):
     # re-index each node in the tree
     tree1.reorder_whole_tree()
     tree2.reorder_whole_tree()
-    
+
+
 def swap_parents(node1, node2, tree1, tree2):
     """remaps the parents of two randomly selected nodes"""
-    parent_node1, left_node1, right_node1, val_node1, coeff_node1, op_node1, num_children_node1, name_node1 = get_relatives(node1)
-    parent_node2, left_node2, right_node2, val_node2, coeff_node2, op_node2, num_children_node2, name_node2 = get_relatives(node2)
-    
-    #update indeces
+    parent_node1, left_node1, right_node1, val_node1, coeff_node1, op_node1, num_children_node1, name_node1 = get_relatives(
+        node1
+    )
+    parent_node2, left_node2, right_node2, val_node2, coeff_node2, op_node2, num_children_node2, name_node2 = get_relatives(
+        node2
+    )
+
+    # update indeces
     # get parents of nodes
     d = int(node1.index)
     e = int(node2.index)
@@ -39,21 +45,25 @@ def swap_parents(node1, node2, tree1, tree2):
     node1.right = right_node2
     node1.op = op_node2
     node1.num_children = num_children_node2
-    
+
     node2.coeff = coeff_node1
     node2.value = val_node1
     node2.left = left_node1
     node2.right = right_node1
     node2.op = op_node1
-    node2.num_children = num_children_node1 
-    
-    #make nodes point to new parents
+    node2.num_children = num_children_node1
+
+    # make nodes point to new parents
     node1.parent = p1
     node2.parent = p2
-    
+
+
 def get_relatives(node):
     """returns deep copy of node attributes"""
-    return copy.deepcopy([node.parent, node.left, node.right, node.value, node.coeff, node.op, node.num_children, node.name])
+    return copy.deepcopy(
+        [node.parent, node.left, node.right, node.value, node.coeff, node.op, node.num_children, node.name]
+    )
+
 
 def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="test"):
     """takes in tree & creates graphviz (DOT language graph description).
@@ -77,7 +87,7 @@ def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="te
         if n.num_children > 0:
             if show_coeff:
                 if n.coeff is not None:
-                    dot.node(str(n.index), str(n.coeff)+'\n'+str(n.op))
+                    dot.node(str(n.index), str(n.coeff) + '\n' + str(n.op))
                 else:
                     dot.node(str(n.index), n.op)
             else:
@@ -89,7 +99,7 @@ def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="te
             if n.coeff is not None and n.value is None:
                 dot.node(str(n.index), str(n.coeff))
             elif n.coeff is not None and n.value is not None:
-                dot.node(str(n.index), str(n.coeff)+'*'+str(n.value))
+                dot.node(str(n.index), str(n.coeff) + '*' + str(n.value))
             elif n.coeff is None and n.value is not None:
                 dot.node(str(n.index), str(n.value))
 
@@ -103,7 +113,7 @@ def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="te
 
     # Export & display tree in separate window
     if render:
-        dot.format=render_format
+        dot.format = render_format
         dot.render('test-output/{}'.format(name), view=True)
 
     return dot
