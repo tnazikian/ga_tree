@@ -163,31 +163,10 @@ class Bin_tree:
             self.generate_tree(self.node_list[n].probs, self.node_list[n])
         self.reorder_whole_tree()
 
-    def traverse(self, node=None, string=""):
+    def traverse(self, node=None):
         if node is None:
             node = self.get_root()
-        if node.num_children == 1:
-            string += node.op
-            if node.coeff == None:
-                string += '(' + self.traverse(node.left) + ')'
-            else:
-                string += '(' + str(node.coeff) + '*' + self.traverse(node.left) + ')'
-        # if binary
-        elif node.num_children == 2:
-            string += '(' + self.traverse(node.left)
-            string += node.op
-            string += self.traverse(node.right) + ')'
-
-        # if leaf node
-        else:
-            if node.coeff == None:
-                string += str(node.value)
-            # if constant leaf node, will only have coefficient
-            elif node.value == None:
-                string += str(node.coeff)
-            else:
-                string += '(' + str(node.coeff) + '*' + str(node.value) + ')'
-        return string
+        return node.traverse()
 
     def index_tree(self, node):
         """depth wise travels down tree and indexes each node. returns list of nodes in same order"""

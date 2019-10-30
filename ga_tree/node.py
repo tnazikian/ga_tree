@@ -75,3 +75,28 @@ class Node:
         if self.num_children > 0:
             return "(left: {}, op: {}, right: {})".format(self.left, self.op, self.right)
         return "{}*{}".format(self.coeff, self.value)
+
+    def traverse(self):
+        string = ""
+        if self.num_children == 1:
+            string += self.op
+            if self.coeff is None and self.left is not None:
+                string += '(' + self.left.traverse() + ')'
+            elif self.right is not None:
+                string += '(' + str(self.coeff) + '*' + self.right.traverse() + ')'
+        # if binary
+        elif self.num_children == 2:
+            string += '(' + self.left.traverse()
+            string += self.op
+            string += self.right.traverse() + ')'
+
+        # if leaf node
+        else:
+            if self.coeff is None:
+                string += str(self.value)
+            # if constant leaf node, will only have coefficient
+            elif self.value == None:
+                string += str(self.coeff)
+            else:
+                string += '(' + str(self.coeff) + '*' + str(self.value) + ')'
+        return string
