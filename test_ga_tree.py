@@ -21,6 +21,7 @@ individuals = []
 for i in range(num_individuals):
     a = ga_tree.Bin_tree(delta=delta, term=terminal_operands, unary=unary_operands, binary=binary_operands)
     a.generate_tree(c)
+    print('depth=%d'%a.depth)
     individuals.append(a)
 pop = ga_tree.Population(individuals, data_in, data_out)
 

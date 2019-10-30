@@ -242,6 +242,37 @@ class Bin_tree:
         self.fitness = np.abs(p)
         return self.fitness
 
+    @property
+    def depth(self):
+        max_depth = 0
+        for node in self.node_list:
+            try:
+                p = node.parent
+                if p is None:
+                    d = 0
+                else:
+                    d = 1
+                    while p is not self.root:
+                        d += 1
+                        n = p
+                        p = p.parent
+                max_depth = max((max_depth, d))
+            except:
+                p = node.parent
+                if p is None:
+                    d = 0
+                else:
+                    d = 1
+                    while p is not self.root:
+                        print(d,'    '*d,node)
+                        d += 1
+                        n = p
+                        if p.parent is None:
+                            print('asd')
+                        p = p.parent
+                max_depth = max((max_depth, d))
+        return max_depth
+
     # def __deepcopy__(self, memo={}):
 
 
