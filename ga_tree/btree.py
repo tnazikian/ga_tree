@@ -19,7 +19,7 @@ import copy
 
 class Bin_tree:
     def __init__(self, delta, term, unary, binary, COEFF_MAX=3):
-        self.root = Node("root")
+        self.root = Node("root", parent=None)
         self.delta = delta
         self.num_nodes = 0
         self.node_list = []
@@ -105,14 +105,14 @@ class Bin_tree:
                         node.right.coeff = 'c' + str(node.index)
                     else:
                         node.right.coeff = np.random.uniform(COEFF_MAX)
-                    node.right.parent = node.parent
+                    node.right.parent = node
                     # parent node points to child of current node
                     # so that child can replace current node
                     if node.name != "root":
                         if node.name == "left":
-                            node.parent.left = node.right
+                            node.parent.left = node
                         else:
-                            node.parent.right = node.right
+                            node.parent.right = node
                     node.right.name = node.name
                     node.right.index = node.index
                 else:
@@ -120,12 +120,12 @@ class Bin_tree:
                         node.left.coeff = 'c' + str(node.index)
                     else:
                         node.left.coeff = np.random.uniform(COEFF_MAX)
-                    node.left.parent = node.parent
+                    node.left.parent = node
                     if node.name != "root":
                         if node.name == "left":
-                            node.parent.left = node.left
+                            node.parent.left = node
                         else:
-                            node.parent.right = node.left
+                            node.parent.right = node
                     node.left.name = node.name
                     node.left.index = node.index
 
@@ -135,7 +135,7 @@ class Bin_tree:
                 node.left.coeff = None
                 node.right.coeff = None
 
-        self.reorder_whole_tree()
+        #self.reorder_whole_tree()
         return out
 
     def get_root(self):

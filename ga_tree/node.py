@@ -17,7 +17,7 @@ __all__ = ['Node']
 
 
 class Node:
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent):
         self.name = name
         self.num_children = 0
         self.index = None
