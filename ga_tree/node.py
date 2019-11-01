@@ -28,16 +28,21 @@ class Node:
         self._value = None
         self.probs = None
         self.parent = parent
+        self.depth = None
+        if name == "root":
+            self.depth = 0
 
     def init_left(self):
         left_node = Node("left", parent=self)
         self.left = left_node
         self.num_children += 1
+        self.left.depth = self.depth + 1
 
     def init_right(self):
         right_node = Node("right", parent=self)
         self.right = right_node
         self.num_children += 1
+        self.right.depth = self.depth + 1
 
     @property
     def left(self):
@@ -77,26 +82,26 @@ class Node:
         return "{}*{}".format(self.coeff, self.value)
 
     def traverse(self):
-        string = ""
+        s = ""
         if self.num_children == 1:
-            string += self.op
+            s += self.op
             if self.coeff is None and self.left is not None:
-                string += '(' + self.left.traverse() + ')'
-            elif self.right is not None:
-                string += '(' + str(self.coeff) + '*' + self.right.traverse() + ')'
+                s += '(' + self.left.traverse() + ')'
+            else:
+                s += '(' + str(self.coeff) + '*' + self.left.traverse() + ')'
         # if binary
         elif self.num_children == 2:
-            string += '(' + self.left.traverse()
-            string += self.op
-            string += self.right.traverse() + ')'
+            s += '(' + self.left.traverse()
+            s += self.op
+            s += self.right.traverse() + ')'
 
         # if leaf node
         else:
             if self.coeff is None:
-                string += str(self.value)
+                s += str(self.value)
             # if constant leaf node, will only have coefficient
             elif self.value == None:
-                string += str(self.coeff)
+                s += str(self.coeff)
             else:
-                string += '(' + str(self.coeff) + '*' + str(self.value) + ')'
-        return string
+                s += '(' + str(self.coeff) + '*' + str(self.value) + ')'
+        return s

@@ -1,7 +1,7 @@
 import ga_tree
 import numpy as np
 
-num_cycles = 10
+num_cycles = 100
 num_individuals = 10
 data_in = {}
 data_in['x'] = np.linspace(0, 2 * np.pi * 10, 1000)

@@ -25,19 +25,32 @@ def swap_subtrees(tree1, tree2, debug=False):
 
 def swap_parents(node1, node2, tree1, tree2):
     """remaps the parents of two randomly selected nodes"""
-    parent_node1, left_node1, right_node1, val_node1, coeff_node1, op_node1, num_children_node1, name_node1 = get_relatives(
+    parent_node1, left_node1, right_node1, val_node1, coeff_node1, op_node1, num_children_node1, name_node1, depth_n1 = get_relatives(
         node1
     )
-    parent_node2, left_node2, right_node2, val_node2, coeff_node2, op_node2, num_children_node2, name_node2 = get_relatives(
+    parent_node2, left_node2, right_node2, val_node2, coeff_node2, op_node2, num_children_node2, name_node2, depth_n2 = get_relatives(
         node2
     )
 
     # update indeces
     # get parents of nodes
-    d = int(node1.index)
-    e = int(node2.index)
-    p1 = tree1.node_list[d].parent
-    p2 = tree2.node_list[e].parent
+    # d = int(node1.index) - 1    # subtract 1 because all indeces start at 1
+    # e = int(node2.index) - 1
+    # p1 = tree1.node_list[d].parent
+    # p2 = tree2.node_list[e].parent
+    # pi1 = tree1.node_list.index(node1.parent)
+    # pi2 = tree2.node_list.index(node2.parent)
+    # p1 = tree1.node_list[pi1]
+    # p2 = tree2.node_list[pi2]
+    # make nodes point to new parents
+    if node1.name != "root":
+        pi1 = tree1.node_list.index(node1.parent)
+        p1 = tree1.node_list[pi1]
+        node1.parent = p1
+    if node2.name != "root":
+        pi2 = tree2.node_list.index(node2.parent)
+        p2 = tree2.node_list[pi2]
+        node2.parent = p2
 
     node1.coeff = coeff_node2
     node1.value = val_node2
@@ -45,6 +58,7 @@ def swap_parents(node1, node2, tree1, tree2):
     node1.right = right_node2
     node1.op = op_node2
     node1.num_children = num_children_node2
+    node1.depth = depth_n2
 
     node2.coeff = coeff_node1
     node2.value = val_node1
@@ -52,16 +66,12 @@ def swap_parents(node1, node2, tree1, tree2):
     node2.right = right_node1
     node2.op = op_node1
     node2.num_children = num_children_node1
-
-    # make nodes point to new parents
-    node1.parent = p1
-    node2.parent = p2
-
+    node2.depth = depth_n1
 
 def get_relatives(node):
     """returns deep copy of node attributes"""
     return copy.deepcopy(
-        [node.parent, node.left, node.right, node.value, node.coeff, node.op, node.num_children, node.name]
+        [node.parent, node.left, node.right, node.value, node.coeff, node.op, node.num_children, node.name, node.depth]
     )
 
 

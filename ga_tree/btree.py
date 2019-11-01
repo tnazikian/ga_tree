@@ -92,6 +92,8 @@ class Bin_tree:
                 else:
                     node.coeff = eval(str(node.left.coeff) + node.op + str(node.right.coeff))
                 out = "constant"
+                self.node_list.remove(node.left)
+                self.node_list.remove(node.right)
                 node.left = None
                 node.right = None
                 node.num_children = 0
@@ -105,35 +107,45 @@ class Bin_tree:
                         node.right.coeff = 'c' + str(node.index)
                     else:
                         node.right.coeff = np.random.uniform(COEFF_MAX)
-                    node.right.parent = node
+                    node.right.parent = node.parent
                     # parent node points to child of current node
                     # so that child can replace current node
-                    if node.name != "root":
-                        if node.name == "left":
-                            node.parent.left = node
-                        else:
-                            node.parent.right = node
+                    # if node.name != "root":
+                    if node.name == "left":
+                        node.parent.left = node.right
+                    elif node.name == "right":
+                        node.parent.right = node.right
+                    node.right.depth -= 1
                     node.right.name = node.name
                     node.right.index = node.index
-                else:
+                    self.node_list.remove(node.left)
+                    if self.get_root() == node:
+                        self.root = node.left
+                elif right == "constant":
                     if TEST:
                         node.left.coeff = 'c' + str(node.index)
                     else:
                         node.left.coeff = np.random.uniform(COEFF_MAX)
-                    node.left.parent = node
-                    if node.name != "root":
-                        if node.name == "left":
-                            node.parent.left = node
-                        else:
-                            node.parent.right = node
+                    node.left.parent = node.parent
+                    if node.name == "left":
+                        node.parent.left = node.left
+                    elif node.name == "right":
+                        node.parent.right = node.left
+                    node.left.depth -= 1
                     node.left.name = node.name
                     node.left.index = node.index
+                    self.node_list.remove(node.right)
+                    if self.get_root() == node:
+                        self.root = node.right
+                self.node_list.remove(node)
+
 
             # If operator is * or /, then combine the coefficients of both branches
             elif (left != "constant" and right != "constant") and (node.op == "*" or node.op == "/"):
-                node.coeff = "c" + str(node.index)
-                node.left.coeff = None
-                node.right.coeff = None
+                if node.left.coeff is not None or node.right.coeff is not None:
+                    node.coeff = "c" + str(node.index)
+                    node.left.coeff = None
+                    node.right.coeff = None
 
         #self.reorder_whole_tree()
         return out
@@ -168,19 +180,21 @@ class Bin_tree:
             node = self.get_root()
         return node.traverse()
 
-    def index_tree(self, node):
+    def index_tree(self, node, ind):
         """depth wise travels down tree and indexes each node. returns list of nodes in same order"""
         self.node_list.append(node)
+        node.depth = ind
         node.index = self.num_nodes
         self.num_nodes += 1
         for i in [node.left, node.right]:
             if i is not None:
-                self.index_tree(i)
+                self.index_tree(i, ind+1)
+                i.parent = node
 
     def reorder_whole_tree(self):
         self.num_nodes = 0
         self.node_list = []
-        self.index_tree(self.get_root())
+        self.index_tree(self.get_root(), 0)
 
     def mse_fitness(self, data, y):
         """Uses mean square error to generate a fitness score
@@ -203,14 +217,8 @@ class Bin_tree:
             text_c = text
             for var in vars_in_equation:
                 text_c = text_c.replace(var, str(data[var][i]))
-            try:
-                y_pred = eval(text_c)
-                (y[i] - y_pred) ** 2
-            except:
-                print(self.traverse())
-                print(self.node_list)
-                print(self.get_root().num_children)
-                raise
+            y_pred = eval(text_c)
+            (y[i] - y_pred) ** 2
             err = (y[i] - y_pred) ** 2
             f += err
         mean_error = f / len(data)
@@ -244,34 +252,34 @@ class Bin_tree:
 
     @property
     def depth(self):
-        max_depth = 0
-        for node in self.node_list:
-            try:
-                p = node.parent
-                if p is None:
-                    d = 0
-                else:
-                    d = 1
-                    while p is not self.root:
-                        d += 1
-                        n = p
-                        p = p.parent
-                max_depth = max((max_depth, d))
-            except:
-                p = node.parent
-                if p is None:
-                    d = 0
-                else:
-                    d = 1
-                    while p is not self.root:
-                        print(d,'    '*d,node)
-                        d += 1
-                        n = p
-                        if p.parent is None:
-                            print('asd')
-                        p = p.parent
-                max_depth = max((max_depth, d))
-        return max_depth
+        return max([node.depth for node in self.node_list])
+
+    # max_depth = 0
+    # for node in self.node_list:
+    #     try:
+    #         p = node.parent
+    #         if p is None:
+    #             d = 0
+    #         else:
+    #             d = 1
+    #             while p is not self.root:
+    #                 d += 1
+    #                 n = p
+    #                 p = p.parent
+    #         max_depth = max((max_depth, d))
+    #     except:
+    #         p = node.parent
+    #         if p is None:
+    #             d = 0
+    #         else:
+    #             d = 1
+    #             while p is not self.root:
+    #                 print(d, '    ' * d, node)
+    #                 d += 1
+    #                 n = p
+    #                 p = p.parent
+    #         max_depth = max((max_depth, d))
+    # return max_depth
 
     # def __deepcopy__(self, memo={}):
 
