@@ -44,7 +44,10 @@ def swap_parents(node1, node2, tree1, tree2):
     # p2 = tree2.node_list[pi2]
     # make nodes point to new parents
     if node1.name != "root":
-        pi1 = tree1.node_list.index(node1.parent)
+        try:
+            pi1 = tree1.node_list.index(node1.parent)
+        except:
+            print(tree1.traverse())
         p1 = tree1.node_list[pi1]
         node1.parent = p1
     if node2.name != "root":

@@ -11,14 +11,15 @@ from .node import Node
 import numpy as np
 from numpy import *
 from scipy.stats.stats import pearsonr
+from sklearn.metrics import mean_squared_error as mse
 
 TEST = False  # Toggle if you want real numbers for coeffs
-COEFF_MAX = 3
+COEFF_MAX = 10
 import copy
 
 
 class Bin_tree:
-    def __init__(self, delta, term, unary, binary, COEFF_MAX=3):
+    def __init__(self, delta, term, unary, binary, COEFF_MAX=10):
         self.root = Node("root", parent=None)
         self.delta = delta
         self.num_nodes = 0
@@ -27,6 +28,7 @@ class Bin_tree:
         self.terminal_operands = term
         self.unary_operands = unary
         self.binary_operands = binary
+        self.fitness = None
 
     def generate_tree(self, c, node=None):
         """
@@ -56,7 +58,6 @@ class Bin_tree:
         # no operands
         if r < c[0]:
             node.num_children = 0
-            #             node.coeff = np.random.uniform(coeff_max)
             val = np.random.choice(self.terminal_operands)
             # If a constant is chosen as a leaf node, then the c {index of node} is created
             if val == "c":
@@ -65,6 +66,7 @@ class Bin_tree:
                     node.coeff = val + str(node.index)
                 else:
                     node.coeff = np.random.uniform(COEFF_MAX)
+                    # node.coeff = 1
                 out = "constant"
             else:
                 node.value = val
@@ -73,7 +75,6 @@ class Bin_tree:
             node.init_left()
             node.num_children = 1
             node.op = np.random.choice(self.unary_operands)
-            #             node.coeff = np.random.uniform(coeff_max)
             self.generate_tree(c, node.left)
         # binary
         else:
@@ -90,7 +91,9 @@ class Bin_tree:
                 if TEST:
                     node.coeff = "c" + str(node.index)
                 else:
-                    node.coeff = eval(str(node.left.coeff) + node.op + str(node.right.coeff))
+                    # node.coeff = eval(str(node.left.coeff) + node.op + str(node.right.coeff))
+                    # node.coeff = 1
+                    node.coeff = np.random.uniform(COEFF_MAX)
                 out = "constant"
                 self.node_list.remove(node.left)
                 self.node_list.remove(node.right)
@@ -143,11 +146,13 @@ class Bin_tree:
             # If operator is * or /, then combine the coefficients of both branches
             elif (left != "constant" and right != "constant") and (node.op == "*" or node.op == "/"):
                 if node.left.coeff is not None or node.right.coeff is not None:
-                    node.coeff = "c" + str(node.index)
+                    # node.coeff = "c" + str(node.index)
+                    # node.coeff = 1
+                    node.coeff = np.random.uniform(COEFF_MAX)
                     node.left.coeff = None
                     node.right.coeff = None
 
-        #self.reorder_whole_tree()
+        self.reorder_whole_tree()
         return out
 
     def get_root(self):
@@ -186,43 +191,57 @@ class Bin_tree:
         node.depth = ind
         node.index = self.num_nodes
         self.num_nodes += 1
-        for i in [node.left, node.right]:
+        if node.coeff is not None:
+            self.coeff_list.append(node)
+        for ind, i in enumerate([node.left, node.right]):
             if i is not None:
                 self.index_tree(i, ind+1)
                 i.parent = node
+                if ind==0:
+                    node.name = "left"
+                else:
+                    node.name = "right"
 
     def reorder_whole_tree(self):
         self.num_nodes = 0
         self.node_list = []
         self.index_tree(self.get_root(), 0)
+        self.get_root().name = "root"
 
     def mse_fitness(self, data, y):
         """Uses mean square error to generate a fitness score
         Use for tuning coeffs after functional form determined"""
-        f = 0
-        # find all columns that are in tree
-        datacols = data.columns
-        # Get subset of data with only these
 
-        text = self.traverse()
-        # Create a sorted list of variables that are present in function
-        x = [(text.find(i), i) for i in datacols]
-        # sort vars by order of appearance from left to right
-        #         x.sort(key=lambda x: x[0])
-        vars_in_equation = [i[1] for i in x]
-        #         #create data subset
-        #         subset = data[vars_in_equation]
-        ind = 0
-        for i, row in data.iterrows():
-            text_c = text
-            for var in vars_in_equation:
-                text_c = text_c.replace(var, str(data[var][i]))
-            y_pred = eval(text_c)
-            (y[i] - y_pred) ** 2
-            err = (y[i] - y_pred) ** 2
-            f += err
-        mean_error = f / len(data)
-        self.fitness = 1000 * (1 / (1 + mean_error))
+        function = self.traverse()
+        for k in range(100):
+            data['c%d' % k] = 1.0
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            try:
+                func_output = eval(function, globals(), data)
+            except ZeroDivisionError:
+                self.fitness = 0 # If zero in denom. ignore tree in next cycle
+                return self.fitness
+
+        if isinstance(func_output, (np.float64, float64, float, int, np.int32)):
+            func_output = y * 0.0 + func_output
+        func_output_fixed = np.nan_to_num(func_output)
+        # normalized_func_output = (func_output_fixed - min(func_output_fixed)) / (
+        #             max(func_output_fixed) - min(func_output_fixed))
+
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('error')
+                p = mse(func_output_fixed, y)
+                #if normalize
+                # p = mse(normalized_func_output, y)
+        except Exception as _excp:
+            self.fitness = 0  # If zero in denom. ignore tree in next cycle
+            return self.fitness
+        if np.isnan(p):
+            self.fitness = 0  # If zero in denom. ignore tree in next cycle
+            return self.fitness
+        self.fitness = 1000 * (1 / (1 + p))
         return self.fitness
 
     def cor_fitness(self, data, y):
@@ -236,13 +255,17 @@ class Bin_tree:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             func_output = eval(function, globals(), data)
-        if isinstance(func_output, (np.float64, float64, float)):
+        if isinstance(func_output, (np.float64, float64, float, int, np.int32)):
             func_output = y * 0.0 + func_output
         func_output_fixed = np.nan_to_num(func_output)
+        # normalized_func_output = (func_output_fixed - min(func_output_fixed)) / (max(func_output_fixed) - min(func_output_fixed))
+
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter('error')
                 p = pearsonr(func_output_fixed, y)[0]
+                # if normalize
+                # p = pearsonr(normalized_func_output, y)[0]
         except Exception as _excp:
             p = 0.0
         if np.isnan(p):
