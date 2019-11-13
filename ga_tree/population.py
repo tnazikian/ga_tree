@@ -15,8 +15,8 @@ import numpy as np
 from .helper import *
 from .btree import Bin_tree
 
-MATE = 0.4  # proportion of total population chosen to mate
-MUTATE = 0.5  # proportion of offspring that mutate
+MATE = 0.6  # proportion of total population chosen to mate
+MUTATE = 0.3  # proportion of offspring that mutate
 INDIVIDUALS = 100  # minimum number of individuals in a population
 
 

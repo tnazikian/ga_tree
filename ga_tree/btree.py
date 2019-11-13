@@ -65,8 +65,8 @@ class Bin_tree:
                 if TEST:
                     node.coeff = val + str(node.index)
                 else:
-                    node.coeff = np.random.uniform(COEFF_MAX)
-                    # node.coeff = 1
+                    # node.coeff = np.random.uniform(COEFF_MAX)
+                    node.coeff = 1
                 out = "constant"
             else:
                 node.value = val
@@ -92,8 +92,8 @@ class Bin_tree:
                     node.coeff = "c" + str(node.index)
                 else:
                     # node.coeff = eval(str(node.left.coeff) + node.op + str(node.right.coeff))
-                    # node.coeff = 1
-                    node.coeff = np.random.uniform(COEFF_MAX)
+                    node.coeff = 1
+                    # node.coeff = np.random.uniform(COEFF_MAX)
                 out = "constant"
                 self.node_list.remove(node.left)
                 self.node_list.remove(node.right)
@@ -109,7 +109,8 @@ class Bin_tree:
                     if TEST:
                         node.right.coeff = 'c' + str(node.index)
                     else:
-                        node.right.coeff = np.random.uniform(COEFF_MAX)
+                        # node.right.coeff = np.random.uniform(COEFF_MAX)
+                        node.right.coeff = 1
                     node.right.parent = node.parent
                     # parent node points to child of current node
                     # so that child can replace current node
@@ -128,7 +129,8 @@ class Bin_tree:
                     if TEST:
                         node.left.coeff = 'c' + str(node.index)
                     else:
-                        node.left.coeff = np.random.uniform(COEFF_MAX)
+                        # node.left.coeff = np.random.uniform(COEFF_MAX)
+                        node.left.coeff = 1
                     node.left.parent = node.parent
                     if node.name == "left":
                         node.parent.left = node.left
@@ -147,8 +149,8 @@ class Bin_tree:
             elif (left != "constant" and right != "constant") and (node.op == "*" or node.op == "/"):
                 if node.left.coeff is not None or node.right.coeff is not None:
                     # node.coeff = "c" + str(node.index)
-                    # node.coeff = 1
-                    node.coeff = np.random.uniform(COEFF_MAX)
+                    node.coeff = 1
+                    # node.coeff = np.random.uniform(COEFF_MAX)
                     node.left.coeff = None
                     node.right.coeff = None
 
@@ -205,8 +207,14 @@ class Bin_tree:
     def reorder_whole_tree(self):
         self.num_nodes = 0
         self.node_list = []
+        self.coeff_list = []
         self.index_tree(self.get_root(), 0)
         self.get_root().name = "root"
+
+    def get_tree_cost(self):
+        # Get cost of tree based on complexity
+        root = self.get_root()
+        return root.get_cost()
 
     def mse_fitness(self, data, y):
         """Uses mean square error to generate a fitness score
@@ -254,11 +262,16 @@ class Bin_tree:
             data['c%d' % k] = 1.0
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            func_output = eval(function, globals(), data)
+            try:
+                func_output = eval(function, globals(), data)
+            except ZeroDivisionError:
+                self.fitness = 0 # If zero in denom. ignore tree in next cycle
+                return self.fitness
         if isinstance(func_output, (np.float64, float64, float, int, np.int32)):
             func_output = y * 0.0 + func_output
         func_output_fixed = np.nan_to_num(func_output)
         # normalized_func_output = (func_output_fixed - min(func_output_fixed)) / (max(func_output_fixed) - min(func_output_fixed))
+
 
         try:
             with warnings.catch_warnings():
@@ -271,7 +284,9 @@ class Bin_tree:
         if np.isnan(p):
             p = 0.0
         self.fitness = np.abs(p)
-        return self.fitness
+
+        asdf = self.get_tree_cost()
+        return self.fitness/self.get_tree_cost()
 
     @property
     def depth(self):

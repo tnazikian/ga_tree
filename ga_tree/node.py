@@ -44,6 +44,15 @@ class Node:
         self.num_children += 1
         self.right.depth = self.depth + 1
 
+    def get_cost(self):
+        cost = self.num_children + 1
+        if self.coeff is not None:
+            cost += 1
+        for child in [self.left, self.right]:
+            if child is not None:
+                cost += child.get_cost()
+        return cost
+
     @property
     def left(self):
         return self._left
