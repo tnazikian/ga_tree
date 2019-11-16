@@ -80,6 +80,84 @@ class Population:
             self.best_ind = current_best_ind
         self.last_best_func = self.individuals[self.best_ind]
 
+    def fill(self, delta, terminal_operands, unary_operands, binary_operands, probs):
+        """
+        :param delta: Amount probs increases/decreases by per level of tree
+
+        :param terminal_operands: constant, or variables
+
+        :param unary_operands:
+
+        :param binary_operands:
+
+        :param probs: original probability [p(leaf), p(unary node), p(binary node)]
+
+        If the population contains invalid functions (fitness score == 0) then they are replaced with valid functions
+        """
+        indiv_scores = np.array([i.mse_fitness(self.data, self.y) for i in self.individuals])
+        null_indices = np.where(indiv_scores == 0)[0]       # Contains number of individuals that have invalid functions
+        # Replace trees until null_indices is empty
+        while len(null_indices) > 0:
+            for i in null_indices:
+                self.individuals[i] = Bin_tree(delta=delta, term=terminal_operands, unary=unary_operands,
+                                                  binary=binary_operands)
+                self.individuals[i].generate_tree(probs)
+            indiv_scores = np.array([i.mse_fitness(self.data, self.y) for i in self.individuals])
+            null_indices = np.where(indiv_scores == 0)[0]
+
+    def tweak_coeffs(self):
+        """
+        Genetic algorithm tweaks the coefficients of each tree in the population.
+        A subpopulation of num_copies_per_cycle is created for each tree in population for the GA to run on. Each tree
+        in the subpop has randomly generated coefficients between -10 and 10. The subpop is run thru a GA that tweaks
+        the coefficients and resamples the trees num_cycles number of times.
+        If, at the end of num_cycles, the MSE of one of the modified trees in the subpop exceeds the original,
+        it replaces the original tree in the population.
+        """
+
+        alpha = 1                       # Step size by which coefficients can be increased/decreased
+        coeffs_tweaked = 3              # Number of coefficients per tree to be randomly selected for tweaking
+        num_cycles= 100                 # Number of times each tree in pop is run through a genetic algorithm
+        num_copies_per_cycle = 10       # Number of copies per subpopulation.
+        for i, tree in enumerate(self.individuals):
+            # make num_copies_per_cycle copies and run them through a GA
+            copies = [tree.get_copy() for _ in range(num_copies_per_cycle)]
+            orig_tree_fitness = tree.mse_fitness(self.data, self.y)
+            copy_scores = [orig_tree_fitness]*num_copies_per_cycle
+
+            # for each copy, assign random coefficients between -10 and 10
+            for copy in copies[:-1]:
+                for node in copy.coeff_list:
+                    node.coeff = np.random.uniform(-10, 10)
+
+            # resample copies num_cycles times
+            for l in range(num_cycles):
+                # Save the last best candidate in case all new trees are worse performing
+                last_best_ind = np.where(copy_scores == np.max(copy_scores))[0][0]
+                last_best = copies[last_best_ind].get_copy()
+                last_best_score = last_best.fitness
+                for copy in copies:
+                    # randomly choose coeffs_tweaked number of coeffs per tree to modify
+                    coeffs_to_tweak = np.random.choice(copy.coeff_list, coeffs_tweaked)
+                    # add/subtract noise*alpha from chosen node coeffs
+                    for c in coeffs_to_tweak:
+                        c.coeff += np.random.choice([-1,1])*alpha
+
+                # Generate new subpopulation with random weighted selection using MSE fitness score
+                copy_scores = [t.mse_fitness(self.data, self.y) for t in copies]
+                copies = np.append(copies, [last_best])
+                copy_scores.append(last_best_score)
+                copies = np.random.choice(copies, len(copies)-1, p=copy_scores / np.sum(copy_scores), replace=True)
+                copy_scores = [i.fitness for i in copies]
+
+                # If last best function has lower MSE than current best function, replace the worst performing candidate
+                if last_best_score > max(copy_scores):
+                    worst_ind = np.where(copy_scores == np.min(copy_scores))[0][0]
+                    copies[worst_ind] = last_best
+                    copy_scores[worst_ind] = last_best_score
+            if orig_tree_fitness < copies[np.where(copy_scores == np.max(copy_scores))[0][0]].fitness:
+                self.individuals[i] = copies[np.where(copy_scores == np.max(copy_scores))[0][0]]
+
     def mate(self):
         num_to_mate = int(len(self.individuals) * MATE)
         if num_to_mate >= 2:

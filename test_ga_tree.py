@@ -15,7 +15,7 @@ import copy
 
 
 num_cycles = 5
-num_individuals = 3000
+num_individuals = 300
 data_in = {}
 data_in['x'] = np.linspace(0, 2 * np.pi * 30, 1000)
 data_in['y'] = np.linspace(0, 2 * np.pi * 30, 1000)
@@ -37,7 +37,20 @@ for i in range(num_individuals):
     a.generate_tree(c)
     print('depth=%d'%a.depth)
     individuals.append(a)
+
+# fill population until no invalid functions remain in population
+# indiv_scores = np.array([i.mse_fitness(data_in, data_out) for i in individuals])
+# null_indices = np.where(indiv_scores==0)[0]
+# while len(null_indices) > 0:
+#     for i in null_indices:
+#         individuals[i] = ga_tree.Bin_tree(delta=delta, term=terminal_operands, unary=unary_operands, binary=binary_operands)
+#         individuals[i].generate_tree(c)
+#     indiv_scores = np.array([i.mse_fitness(data_in, data_out) for i in individuals])
+#     null_indices = np.where(indiv_scores == 0)[0]
+
 pop = ga_tree.Population(individuals, data_in, data_out)
+pop.tweak_coeffs()
+
 # if normalize dataset
 # pop = ga_tree.Population(individuals, data_in, normalized_data_out)
 

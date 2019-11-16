@@ -31,17 +31,6 @@ def swap_parents(node1, node2, tree1, tree2):
     parent_node2, left_node2, right_node2, val_node2, coeff_node2, op_node2, num_children_node2, name_node2, depth_n2 = get_relatives(
         node2
     )
-
-    # update indeces
-    # get parents of nodes
-    # d = int(node1.index) - 1    # subtract 1 because all indeces start at 1
-    # e = int(node2.index) - 1
-    # p1 = tree1.node_list[d].parent
-    # p2 = tree2.node_list[e].parent
-    # pi1 = tree1.node_list.index(node1.parent)
-    # pi2 = tree2.node_list.index(node2.parent)
-    # p1 = tree1.node_list[pi1]
-    # p2 = tree2.node_list[pi2]
     # make nodes point to new parents
     if node1.name != "root":
         pi1 = tree1.node_list.index(node1.parent)

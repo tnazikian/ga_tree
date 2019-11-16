@@ -30,6 +30,9 @@ class Bin_tree:
         self.binary_operands = binary
         self.fitness = None
 
+    def get_copy(self):
+        return copy.deepcopy(self)
+
     def generate_tree(self, c, node=None):
         """
         generates tree recursively from a starter node
@@ -70,12 +73,14 @@ class Bin_tree:
                 out = "constant"
             else:
                 node.value = val
+                node.coeff = 1
         # unary operation
         elif r > c[0] and (r - c[0]) < c[1]:
             node.init_left()
             node.num_children = 1
             node.op = np.random.choice(self.unary_operands)
             self.generate_tree(c, node.left)
+            node.coeff = 1
         # binary
         else:
             node.init_left()
@@ -153,6 +158,8 @@ class Bin_tree:
                     # node.coeff = np.random.uniform(COEFF_MAX)
                     node.left.coeff = None
                     node.right.coeff = None
+            if node.coeff is None:
+                node.coeff = 1
 
         self.reorder_whole_tree()
         return out
@@ -291,35 +298,5 @@ class Bin_tree:
     @property
     def depth(self):
         return max([node.depth for node in self.node_list])
-
-    # max_depth = 0
-    # for node in self.node_list:
-    #     try:
-    #         p = node.parent
-    #         if p is None:
-    #             d = 0
-    #         else:
-    #             d = 1
-    #             while p is not self.root:
-    #                 d += 1
-    #                 n = p
-    #                 p = p.parent
-    #         max_depth = max((max_depth, d))
-    #     except:
-    #         p = node.parent
-    #         if p is None:
-    #             d = 0
-    #         else:
-    #             d = 1
-    #             while p is not self.root:
-    #                 print(d, '    ' * d, node)
-    #                 d += 1
-    #                 n = p
-    #                 p = p.parent
-    #         max_depth = max((max_depth, d))
-    # return max_depth
-
-    # def __deepcopy__(self, memo={}):
-
 
 __all__ = ['Bin_tree']
