@@ -116,3 +116,11 @@ def plot_tree(tree, show_coeff=True, render=False, render_format='pdf', name="te
         dot.render('test-output/{}'.format(name), view=True)
 
     return dot
+
+# def normalize_data(data):
+#     """Takes in dataset as a dict and returns normalized dataset """
+#     new
+#     for col in data:
+#         normalize(col)
+#
+#     return norm_data, std_data

@@ -10,10 +10,9 @@ resampling with replacement based on fitness scores, and a
 chromosome swapping and mutation phase.
 
 """
-import copy, random
-import numpy as np
-from .helper import *
 from .btree import Bin_tree
+from .helper import *
+import statistics
 
 MATE = 0.6  # proportion of total population chosen to mate
 MUTATE = 0.3  # proportion of offspring that mutate
@@ -29,8 +28,23 @@ class Population:
             self.pop_size = len(individuals)
         self.data = data
         self.y = y
+        # self.normalized_data =
+        self.std_x = {}
+        self.std_y = np.std(y)
+        self.mean_x = {}
+        self.mean_y = np.mean(y)
+        self.standardized_data = {}
+        self.standardized_y = (y - self.mean_y)/self.std_y
+        for col_name, col_values in self.data.items():
+            self.std_x[col_name] = np.std(col_values)
+            self.mean_x[col_name] = np.mean(col_values)
+            self.standardized_data[col_name] = (col_values - self.mean_x[col_name]) / self.std_x[col_name]
+
         # Calculate fitness scores of initial population
-        self.scores = [individual.cor_fitness(self.data, self.y) for individual in individuals]
+        self.scores = []
+        for individual in individuals:
+            individual.predict(self.standardized_data)
+        self.scores = [individual.mse_fitness((np.asarray(individual.predict(self.standardized_data))*self.std_y + self.mean_y), self.y) for individual in individuals]
         self.best_ind = np.where(self.scores == np.max(self.scores))[0][0]
         # used to compare best score of previous population to new population
         self.last_best_func = self.individuals[self.best_ind]
@@ -61,17 +75,17 @@ class Population:
         if len(mutate_ind) > 0:
             self.mutate(mutate_ind)
         if fitness_func == "mse":
-            self.scores = [individual.mse_fitness(self.data, self.y) for individual in self.individuals]
+            self.scores = [individual.mse_fitness((np.asarray(individual.predict(self.standardized_data))*self.std_y + self.mean_y), self.y) for individual in self.individuals]
         else:
-            self.scores = [individual.cor_fitness(self.data, self.y) for individual in self.individuals]
+            self.scores = [individual.cor_fitness((np.asarray(individual.predict(self.standardized_data))*self.std_y + self.mean_y), self.y) for individual in self.individuals]
         current_best_ind = np.where(self.scores == np.max(self.scores))[0][0]
         worst_score_ind = np.where(self.scores == np.min(self.scores))[0][0]
         # If best score of current pop < previous pop, replace worst performing
         # candidate with previous best candidate
         if fitness_func == "mse":
-            last_score = self.last_best_func.mse_fitness(self.data, self.y)
+            last_score = self.last_best_func.mse_fitness((np.asarray(self.last_best_func.predict(self.standardized_data))*self.std_y + self.mean_y), self.y)
         else:
-            last_score = self.last_best_func.cor_fitness(self.data, self.y)
+            last_score = self.last_best_func.cor_fitness((np.asarray(self.last_best_func.predict(self.standardized_data))*self.std_y + self.mean_y), self.y)
         if last_score > self.scores[current_best_ind]:
             self.scores[worst_score_ind] = last_score
             self.individuals[worst_score_ind] = self.last_best_func
@@ -94,18 +108,18 @@ class Population:
 
         If the population contains invalid functions (fitness score == 0) then they are replaced with valid functions
         """
-        indiv_scores = np.array([i.mse_fitness(self.data, self.y) for i in self.individuals])
-        null_indices = np.where(indiv_scores == 0)[0]       # Contains number of individuals that have invalid functions
+        indiv_scores = np.array([individual.mse_fitness((np.asarray(individual.predict(self.standardized_data))*self.std_y + self.mean_y), self.y) for individual in self.individuals])
+        null_indices = np.where(indiv_scores == 0)[0]  # Contains number of individuals that have invalid functions
         # Replace trees until null_indices is empty
         while len(null_indices) > 0:
             for i in null_indices:
                 self.individuals[i] = Bin_tree(delta=delta, term=terminal_operands, unary=unary_operands,
-                                                  binary=binary_operands)
+                                               binary=binary_operands)
                 self.individuals[i].generate_tree(probs)
-            indiv_scores = np.array([i.mse_fitness(self.data, self.y) for i in self.individuals])
+            indiv_scores = np.array([individual.mse_fitness((np.asarray(individual.predict(self.standardized_data))*self.std_y + self.mean_y), self.y) for individual in self.individuals])
             null_indices = np.where(indiv_scores == 0)[0]
 
-    def tweak_coeffs(self):
+    def tweak_coeffs(self, alpha=.1, coeffs_tweaked=None, num_cycles=10, num_copies_per_cycle=100):
         """
         Genetic algorithm tweaks the coefficients of each tree in the population.
         A subpopulation of num_copies_per_cycle is created for each tree in population for the GA to run on. Each tree
@@ -115,15 +129,15 @@ class Population:
         it replaces the original tree in the population.
         """
 
-        alpha = 1                       # Step size by which coefficients can be increased/decreased
-        coeffs_tweaked = 3              # Number of coefficients per tree to be randomly selected for tweaking
-        num_cycles= 100                 # Number of times each tree in pop is run through a genetic algorithm
-        num_copies_per_cycle = 10       # Number of copies per subpopulation.
+        alpha = alpha  # Step size by which coefficients can be increased/decreased
+        coeffs_tweaked = coeffs_tweaked  # Number of coefficients per tree to be randomly selected for tweaking
+        num_cycles = num_cycles  # Number of times each tree in pop is run through a genetic algorithm
+        num_copies_per_cycle = num_copies_per_cycle  # Number of copies per subpopulation.
         for i, tree in enumerate(self.individuals):
             # make num_copies_per_cycle copies and run them through a GA
             copies = [tree.get_copy() for _ in range(num_copies_per_cycle)]
-            orig_tree_fitness = tree.mse_fitness(self.data, self.y)
-            copy_scores = [orig_tree_fitness]*num_copies_per_cycle
+            orig_tree_fitness = tree.mse_fitness((np.asarray(tree.predict(self.standardized_data))*self.std_y + self.mean_y), self.y)
+            copy_scores = [orig_tree_fitness] * num_copies_per_cycle
 
             # for each copy, assign random coefficients between -10 and 10
             for copy in copies[:-1]:
@@ -138,16 +152,20 @@ class Population:
                 last_best_score = last_best.fitness
                 for copy in copies:
                     # randomly choose coeffs_tweaked number of coeffs per tree to modify
-                    coeffs_to_tweak = np.random.choice(copy.coeff_list, coeffs_tweaked)
+                    if coeffs_tweaked is not None:
+                        coeffs_to_tweak = np.random.choice(copy.coeff_list, coeffs_tweaked)
+                    # If none, tweak all coefficients
+                    else:
+                        coeffs_to_tweak = copy.coeff_list
                     # add/subtract noise*alpha from chosen node coeffs
                     for c in coeffs_to_tweak:
-                        c.coeff += np.random.choice([-1,1])*alpha
+                        c.coeff += np.random.choice([-1, 1]) * alpha
 
                 # Generate new subpopulation with random weighted selection using MSE fitness score
-                copy_scores = [t.mse_fitness(self.data, self.y) for t in copies]
+                copy_scores = [t.mse_fitness((np.asarray(t.predict(self.standardized_data))*self.std_y + self.mean_y), self.y) for t in copies]
                 copies = np.append(copies, [last_best])
                 copy_scores.append(last_best_score)
-                copies = np.random.choice(copies, len(copies)-1, p=copy_scores / np.sum(copy_scores), replace=True)
+                copies = np.random.choice(copies, len(copies) - 1, p=copy_scores / np.sum(copy_scores), replace=True)
                 copy_scores = [i.fitness for i in copies]
 
                 # If last best function has lower MSE than current best function, replace the worst performing candidate

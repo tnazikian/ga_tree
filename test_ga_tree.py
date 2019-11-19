@@ -14,7 +14,7 @@ COEFF_MAX = 10
 import copy
 
 
-num_cycles = 5
+num_cycles = 1
 num_individuals = 300
 data_in = {}
 data_in['x'] = np.linspace(0, 2 * np.pi * 30, 1000)

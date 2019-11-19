@@ -30,6 +30,7 @@ class Bin_tree:
         self.binary_operands = binary
         self.fitness = None
 
+
     def get_copy(self):
         return copy.deepcopy(self)
 
@@ -223,20 +224,37 @@ class Bin_tree:
         root = self.get_root()
         return root.get_cost()
 
-    def mse_fitness(self, data, y):
-        """Uses mean square error to generate a fitness score
-        Use for tuning coeffs after functional form determined"""
-
+    def predict(self, data):
+        """takes in data and returns y predicted"""
         function = self.traverse()
-        for k in range(100):
-            data['c%d' % k] = 1.0
+        # for k in range(100):
+        #     data['c%d' % k] = 1.0
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             try:
                 func_output = eval(function, globals(), data)
             except ZeroDivisionError:
-                self.fitness = 0 # If zero in denom. ignore tree in next cycle
-                return self.fitness
+                return False
+        return func_output
+
+    def mse_fitness(self, func_output, y):
+        """Uses mean square error to generate a fitness score
+        Use for tuning coeffs after functional form determined"""
+
+        if func_output is False:
+            self.fitness = 0
+            return self.fitness
+        # func_output = self.predict(data)
+        # function = self.traverse()
+        # for k in range(100):
+        #     data['c%d' % k] = 1.0
+        # with warnings.catch_warnings():
+        #     warnings.simplefilter('ignore')
+        #     try:
+        #         func_output = eval(function, globals(), data)
+        #     except ZeroDivisionError:
+        #         self.fitness = 0 # If zero in denom. ignore tree in next cycle
+        #         return self.fitness
 
         if isinstance(func_output, (np.float64, float64, float, int, np.int32)):
             func_output = y * 0.0 + func_output
@@ -278,8 +296,6 @@ class Bin_tree:
             func_output = y * 0.0 + func_output
         func_output_fixed = np.nan_to_num(func_output)
         # normalized_func_output = (func_output_fixed - min(func_output_fixed)) / (max(func_output_fixed) - min(func_output_fixed))
-
-
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter('error')
