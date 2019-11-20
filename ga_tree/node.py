@@ -92,14 +92,14 @@ class Node:
 
     def traverse(self):
         s = ""
-        if self.num_children == 1:
+        if self.left is not None and self.right is None:
             s += self.op
-            if self.coeff is None and self.left is not None:
+            if self.coeff is None:
                 s += '(' + self.left.traverse() + ')'
             else:
                 s += '(' + str(self.coeff) + '*' + self.left.traverse() + ')'
         # if binary
-        elif self.num_children == 2:
+        elif self.left is not None and self.right is not None:
             s += '(' + self.left.traverse()
             s += self.op
             s += self.right.traverse() + ')'

@@ -34,6 +34,156 @@ class Bin_tree:
     def get_copy(self):
         return copy.deepcopy(self)
 
+    # def generate_tree(self, c, node=None):
+    #     """
+    #     generates tree recursively from a starter node
+    #
+    #     :param c: array containing probabilities: [P(0 children), P(Unary), P(Binary)]
+    #
+    #     :param node: node object (if None use the tree root)
+    #
+    #     :return out: String containing either None or "constant" - used to check if subtree is a root node with a constant
+    #     """
+    #     if node is None:
+    #         node = self.get_root()
+    #     node.probs = c
+    #
+    #     out = None  # variable that tells whether node was constant or variable
+    #     self.num_nodes += 1
+    #     node.index = self.num_nodes
+    #     self.node_list.append(node)
+    #     r = np.random.rand()
+    #     # decrease p(double branch) while
+    #     # increase p(no branch)
+    #     c = copy.deepcopy(c)
+    #     c[0] += self.delta
+    #     c[1] -= self.delta / 2
+    #     c[2] -= self.delta / 2
+    #     # no operands
+    #     if r < c[0]:
+    #         node.num_children = 0
+    #         val = np.random.choice(self.terminal_operands)
+    #         # If a constant is chosen as a leaf node, then the c {index of node} is created
+    #         if val == "c":
+    #             node.value = None
+    #             if TEST:
+    #                 node.coeff = val + str(node.index)
+    #             else:
+    #                 # node.coeff = np.random.uniform(COEFF_MAX)
+    #                 node.coeff = 1
+    #             out = "constant"
+    #         else:
+    #             node.value = val
+    #             node.coeff = 1
+    #     # unary operation
+    #     elif r > c[0] and (r - c[0]) < c[1]:
+    #         node.init_left()
+    #         node.num_children = 1
+    #         node.op = np.random.choice(self.unary_operands)
+    #         self.generate_tree(c, node.left)
+    #         node.coeff = 1
+    #     # binary
+    #     else:
+    #         node.init_left()
+    #         node.init_right()
+    #         node.num_children = 2
+    #         node.op = np.random.choice(self.binary_operands)
+    #         left = self.generate_tree(c, node.left)
+    #         right = self.generate_tree(c, node.right)
+    #         # If the left and right children are constants, then convert current node into leaf node
+    #         if left == "constant" and right == "constant":
+    #             # erase children and assign evaluated value
+    #             node.value = None
+    #             if TEST:
+    #                 node.coeff = "c" + str(node.index)
+    #             else:
+    #                 # node.coeff = eval(str(node.left.coeff) + node.op + str(node.right.coeff))
+    #                 node.coeff = 1
+    #                 # node.coeff = np.random.uniform(COEFF_MAX)
+    #             out = "constant"
+    #             # self.node_list.remove(node.left)
+    #             # self.node_list.remove(node.right)
+    #             node.left = None
+    #             node.right = None
+    #             node.num_children = 0
+    #
+    #         # if one branch is constant and operator is '*', store constant
+    #         # as attribute of other branch, and replace current node with
+    #         # the child node.
+    #         elif (left == "constant" or right == "constant") and (node.op == "*" or node.op == "/"):
+    #             if left == "constant":
+    #                 if TEST:
+    #                     node.right.coeff = 'c' + str(node.index)
+    #                 else:
+    #                     # node.right.coeff = np.random.uniform(COEFF_MAX)
+    #                     node.right.coeff = 1
+    #                 node.right.parent = node.parent
+    #                 # parent node points to child of current node
+    #                 # so that child can replace current node
+    #                 # if node.name != "root":
+    #                 if node.name == "left":
+    #                     node.parent.left = node.right
+    #                 elif node.name == "right":
+    #                     node.parent.right = node.right
+    #                 node.right.depth -= 1
+    #                 node.right.name = node.name
+    #                 node.right.index = node.index
+    #                 self.node_list.remove(node.left)
+    #                 if self.get_root() == node:
+    #                     self.root = node.left
+    #             elif right == "constant":
+    #                 if TEST:
+    #                     node.left.coeff = 'c' + str(node.index)
+    #                 else:
+    #                     # node.left.coeff = np.random.uniform(COEFF_MAX)
+    #                     node.left.coeff = 1
+    #                 node.left.parent = node.parent
+    #                 if node.name == "left":
+    #                     node.parent.left = node.left
+    #                 elif node.name == "right":
+    #                     node.parent.right = node.left
+    #                 node.left.depth -= 1
+    #                 node.left.name = node.name
+    #                 node.left.index = node.index
+    #                 self.node_list.remove(node.right)
+    #                 if self.get_root() == node:
+    #                     self.root = node.right
+    #             self.node_list.remove(node)
+    #
+    #
+    #         # If operator is * or /, then combine the coefficients of both branches
+    #         elif (node.left.value is not None and node.right.value is not None) and (node.op in self.binary_operands):
+    #             if node.left.coeff is not None or node.right.coeff is not None:
+    #                 # node.coeff = "c" + str(node.index)
+    #                 node.coeff = 1
+    #                 # node.coeff = np.random.uniform(COEFF_MAX)
+    #                 node.left.coeff = None
+    #                 node.right.coeff = None
+    #
+    #         # If left and right nodes are leaves containing same variable, combine them
+    #         elif (node.left.value == node.right.value) and (node.op == "-" or node.op == "+"):
+    #             node.coeff = 1
+    #             node.value = left.value
+    #             node.left = None
+    #             node.right = None
+    #             node.num_children = 0
+    #             node.op = None
+    #
+    #         # If unary operand followed by constant, replace whole node with constant eg. c1*cos(c2) ~= c3
+    #         if node.op in self.unary_operands and node.left.value is None:
+    #             node.op = None
+    #             node.coeff = 1
+    #             node.left = None
+    #             node.right = None
+    #             node.num_children = 0
+    #             node.value = None
+    #
+    #         if node.coeff is None:
+    #             node.coeff = 1
+    #
+    #     self.reorder_whole_tree()
+    #     return out
+
     def generate_tree(self, c, node=None):
         """
         generates tree recursively from a starter node
@@ -41,14 +191,12 @@ class Bin_tree:
         :param c: array containing probabilities: [P(0 children), P(Unary), P(Binary)]
 
         :param node: node object (if None use the tree root)
-        
-        :return out: String containing either None or "constant" - used to check if subtree is a root node with a constant
+
         """
         if node is None:
             node = self.get_root()
         node.probs = c
 
-        out = None  # variable that tells whether node was constant or variable
         self.num_nodes += 1
         node.index = self.num_nodes
         self.node_list.append(node)
@@ -65,105 +213,82 @@ class Bin_tree:
             val = np.random.choice(self.terminal_operands)
             # If a constant is chosen as a leaf node, then the c {index of node} is created
             if val == "c":
-                node.value = None
                 if TEST:
                     node.coeff = val + str(node.index)
                 else:
-                    # node.coeff = np.random.uniform(COEFF_MAX)
                     node.coeff = 1
-                out = "constant"
             else:
                 node.value = val
-                node.coeff = 1
         # unary operation
         elif r > c[0] and (r - c[0]) < c[1]:
             node.init_left()
             node.num_children = 1
             node.op = np.random.choice(self.unary_operands)
             self.generate_tree(c, node.left)
-            node.coeff = 1
+            # If unary operand followed by constant, replace whole node with constant eg. c1*cos(c2) ~= c3
+            if node.left.coeff is not None and node.left.value is None:
+                node.value = None
+                node.left = None
+                node.right = None
+                node.num_children = 0
+                node.op = None
+
         # binary
         else:
             node.init_left()
             node.init_right()
             node.num_children = 2
             node.op = np.random.choice(self.binary_operands)
-            left = self.generate_tree(c, node.left)
-            right = self.generate_tree(c, node.right)
+            self.generate_tree(c, node.left)
+            self.generate_tree(c, node.right)
             # If the left and right children are constants, then convert current node into leaf node
-            if left == "constant" and right == "constant":
-                # erase children and assign evaluated value
+            if node.left.value is None and node.right.value is None:
                 node.value = None
-                if TEST:
-                    node.coeff = "c" + str(node.index)
-                else:
-                    # node.coeff = eval(str(node.left.coeff) + node.op + str(node.right.coeff))
-                    node.coeff = 1
-                    # node.coeff = np.random.uniform(COEFF_MAX)
-                out = "constant"
-                self.node_list.remove(node.left)
-                self.node_list.remove(node.right)
+                node.coeff = 1
                 node.left = None
                 node.right = None
                 node.num_children = 0
-
+                node.op = None
             # if one branch is constant and operator is '*', store constant
             # as attribute of other branch, and replace current node with
-            # the child node.
-            elif (left == "constant" or right == "constant") and (node.op == "*" or node.op == "/"):
-                if left == "constant":
-                    if TEST:
-                        node.right.coeff = 'c' + str(node.index)
-                    else:
-                        # node.right.coeff = np.random.uniform(COEFF_MAX)
-                        node.right.coeff = 1
-                    node.right.parent = node.parent
-                    # parent node points to child of current node
-                    # so that child can replace current node
-                    # if node.name != "root":
-                    if node.name == "left":
-                        node.parent.left = node.right
-                    elif node.name == "right":
-                        node.parent.right = node.right
-                    node.right.depth -= 1
-                    node.right.name = node.name
-                    node.right.index = node.index
-                    self.node_list.remove(node.left)
-                    if self.get_root() == node:
-                        self.root = node.left
-                elif right == "constant":
-                    if TEST:
-                        node.left.coeff = 'c' + str(node.index)
-                    else:
-                        # node.left.coeff = np.random.uniform(COEFF_MAX)
-                        node.left.coeff = 1
-                    node.left.parent = node.parent
-                    if node.name == "left":
-                        node.parent.left = node.left
-                    elif node.name == "right":
-                        node.parent.right = node.left
-                    node.left.depth -= 1
-                    node.left.name = node.name
-                    node.left.index = node.index
-                    self.node_list.remove(node.right)
-                    if self.get_root() == node:
-                        self.root = node.right
-                self.node_list.remove(node)
+            # the child node
+            elif ((node.left.value is None and node.right.value is not None) or \
+                    (node.right.value is None and node.left.value is not None)) and\
+                    (node.op == "*" or node.op == "/"):
+                if self.get_root() != node:
+                    if node.left.value is not None:
+                        node.left.parent = node.parent
+                        if node == node.parent.left:
+                            node.parent.left = node.left
+                        elif node == node.parent.right:
+                            node.parent.right = node.left
+                    elif node.right.value is not None:
+                        node.right.parent = node.parent
+                        if node == node.parent.left:
+                            node.parent.left = node.right
+                        elif node == node.parent.right:
+                            node.parent.right = node.right
+                else:
+                    if node.left.value is not None:
+                        node = node.left
+                    elif node.right.value is not None:
+                        node = node.right
+                    self.root = node
+                node.num_children = 1
 
-
-            # If operator is * or /, then combine the coefficients of both branches
-            elif (left != "constant" and right != "constant") and (node.op == "*" or node.op == "/"):
-                if node.left.coeff is not None or node.right.coeff is not None:
-                    # node.coeff = "c" + str(node.index)
-                    node.coeff = 1
-                    # node.coeff = np.random.uniform(COEFF_MAX)
-                    node.left.coeff = None
-                    node.right.coeff = None
-            if node.coeff is None:
+            # If left and right nodes are leaves containing same variable, combine them
+            elif (node.left.value == node.right.value) and (node.op == "-" or node.op == "+"):
                 node.coeff = 1
+                node.value = node.left.value
+                node.left = None
+                node.right = None
+                node.num_children = 0
+                node.op = None
+
+        if node.coeff is None:
+            node.coeff = 1
 
         self.reorder_whole_tree()
-        return out
 
     def get_root(self):
         return self.root

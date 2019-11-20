@@ -20,7 +20,7 @@ binary_operands = ['+', '-', '*', '/']
 terminal_operands = ["c"] + list(data_in.keys())
 
 # test to initialize Population
-delta = 0.12
+delta = 0.04
 c = [0.1, 0.3]
 c.append(1 - sum(c))
 individuals = []
@@ -41,8 +41,10 @@ for col_name, col_values in data_in.items():
     std_x[col_name] = np.std(col_values)
     mean_x[col_name] = np.mean(col_values)
     standardized_data[col_name] = (col_values - mean_x[col_name]) / std_x[col_name]
-
-indiv_scores = np.array([i.mse_fitness((np.asarray(i.predict(standardized_data))*std_y + mean_y), data_out) for i in individuals])
+try:
+    indiv_scores = np.array([i.mse_fitness((np.asarray(i.predict(standardized_data))*std_y + mean_y), data_out) for i in individuals])
+except:
+    print(1)
 null_indices = np.where(indiv_scores==0)[0]
 while len(null_indices) > 0:
     for i in null_indices:
