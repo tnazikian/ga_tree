@@ -15,7 +15,7 @@ import copy
 
 
 num_cycles = 1
-num_individuals = 300
+num_individuals = 30
 data_in = {}
 data_in['x'] = np.linspace(0, 2 * np.pi * 30, 1000)
 data_in['y'] = np.linspace(0, 2 * np.pi * 30, 1000)
@@ -28,7 +28,7 @@ binary_operands = ['+', '-', '*', '/']
 terminal_operands = ["c"] + list(data_in.keys())
 
 # test to initialize Population
-delta = 0.04
+delta = 0.12
 c = [0.1, 0.3]
 c.append(1 - sum(c))
 individuals = []

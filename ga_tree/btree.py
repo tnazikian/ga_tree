@@ -226,12 +226,13 @@ class Bin_tree:
             node.op = np.random.choice(self.unary_operands)
             self.generate_tree(c, node.left)
             # If unary operand followed by constant, replace whole node with constant eg. c1*cos(c2) ~= c3
-            if node.left.coeff is not None and node.left.value is None:
+            if node.left.op is None and node.left.coeff is not None and node.left.value is None:
                 node.value = None
                 node.left = None
                 node.right = None
                 node.num_children = 0
                 node.op = None
+
 
         # binary
         else:
@@ -242,9 +243,8 @@ class Bin_tree:
             self.generate_tree(c, node.left)
             self.generate_tree(c, node.right)
             # If the left and right children are constants, then convert current node into leaf node
-            if node.left.value is None and node.right.value is None:
+            if node.left.op is None and node.right.op is None and node.left.value is None and node.right.value is None:
                 node.value = None
-                node.coeff = 1
                 node.left = None
                 node.right = None
                 node.num_children = 0
@@ -252,8 +252,8 @@ class Bin_tree:
             # if one branch is constant and operator is '*', store constant
             # as attribute of other branch, and replace current node with
             # the child node
-            elif ((node.left.value is None and node.right.value is not None) or \
-                    (node.right.value is None and node.left.value is not None)) and\
+            elif ((node.left.op is None and node.left.coeff is not None) or \
+                    (node.right.op is None and node.right.coeff is not None)) and\
                     (node.op == "*" or node.op == "/"):
                 if self.get_root() != node:
                     if node.left.value is not None:
@@ -320,22 +320,39 @@ class Bin_tree:
             node = self.get_root()
         return node.traverse()
 
-    def index_tree(self, node, ind):
+    # def index_tree(self, node, ind):
+    #     """depth wise travels down tree and indexes each node. returns list of nodes in same order"""
+    #     self.node_list.append(node)
+    #     node.depth = ind
+    #     node.index = self.num_nodes
+    #     self.num_nodes += 1
+    #     if node.coeff is not None:
+    #         self.coeff_list.append(node)
+    #     for ind, i in enumerate([node.left, node.right]):
+    #         if i is not None:
+    #             self.index_tree(i, ind+1)
+    #             i.parent = node
+    #             if ind==0:
+    #                 node.name = "left"
+    #             else:
+    #                 node.name = "right"
+
+    def index_tree(self, node, depth):
         """depth wise travels down tree and indexes each node. returns list of nodes in same order"""
         self.node_list.append(node)
-        node.depth = ind
+        node.depth = depth
         node.index = self.num_nodes
         self.num_nodes += 1
         if node.coeff is not None:
             self.coeff_list.append(node)
-        for ind, i in enumerate([node.left, node.right]):
-            if i is not None:
-                self.index_tree(i, ind+1)
-                i.parent = node
-                if ind==0:
-                    node.name = "left"
+        for i, child in enumerate([node.left, node.right]):
+            if child is not None:
+                self.index_tree(child, depth+1)
+                child.parent = node
+                if i==0:
+                    child.name = "left"
                 else:
-                    node.name = "right"
+                    child.name = "right"
 
     def reorder_whole_tree(self):
         self.num_nodes = 0

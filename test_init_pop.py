@@ -6,8 +6,8 @@ from ga_tree.helper import *
 TEST = False  # Toggle if you want real numbers for coeffs
 COEFF_MAX = 10
 
-num_cycles = 5
-num_individuals = 500
+num_cycles = 1
+num_individuals = 30
 data_in = {}
 data_in['x'] = np.linspace(0, 2 * np.pi * 30, 1000)
 data_in['y'] = np.linspace(0, 2 * np.pi * 30, 1000)
@@ -41,10 +41,7 @@ for col_name, col_values in data_in.items():
     std_x[col_name] = np.std(col_values)
     mean_x[col_name] = np.mean(col_values)
     standardized_data[col_name] = (col_values - mean_x[col_name]) / std_x[col_name]
-try:
-    indiv_scores = np.array([i.mse_fitness((np.asarray(i.predict(standardized_data))*std_y + mean_y), data_out) for i in individuals])
-except:
-    print(1)
+indiv_scores = np.array([i.mse_fitness((np.asarray(i.predict(standardized_data))*std_y + mean_y), data_out) for i in individuals])
 null_indices = np.where(indiv_scores==0)[0]
 while len(null_indices) > 0:
     for i in null_indices:
